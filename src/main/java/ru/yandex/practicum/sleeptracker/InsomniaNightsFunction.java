@@ -1,19 +1,28 @@
 package ru.yandex.practicum.sleeptracker;
 
 import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
 import java.util.List;
 
 public class InsomniaNightsFunction implements SleepAnalysisFunction {
 
+    private static final LocalTime NIGHT_START = LocalTime.MIDNIGHT;
+    private static final LocalTime NIGHT_END = LocalTime.of(6, 0);
+    private static final LocalTime EVENING = LocalTime.of(18, 0);
+
     @Override
     public SleepAnalysisResult<Integer> apply(List<SleepingSession> sessions) {
 
-        if (sessions.isEmpty()) {
+        if (sessions == null || sessions.isEmpty()) {
             return new SleepAnalysisResult<>("Количество бессонных ночей", 0);
         }
 
         LocalDateTime firstStart = sessions.get(0).getStart();
         LocalDate firstNight = firstStart.toLocalDate();
+
         if (firstStart.getHour() >= 12) {
             firstNight = firstNight.plusDays(1);
         }
@@ -34,13 +43,10 @@ public class InsomniaNightsFunction implements SleepAnalysisFunction {
     }
 
     private boolean isNightSleep(SleepingSession s) {
-        LocalTime nightStart = LocalTime.MIDNIGHT;
-        LocalTime nightEnd = LocalTime.of(6, 0);
+        LocalTime start = s.getStart().toLocalTime();
+        LocalTime end = s.getEnd().toLocalTime();
 
-        return
-                (s.getStart().toLocalTime().isBefore(nightEnd))
-                        ||
-                        (s.getStart().toLocalTime().isAfter(LocalTime.of(18, 0))
-                                && s.getEnd().toLocalTime().isAfter(nightStart));
+        return start.isBefore(NIGHT_END)
+                || (start.isAfter(EVENING) && end.isAfter(NIGHT_START));
     }
 }
